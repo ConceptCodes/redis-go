@@ -2,11 +2,15 @@ package server
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 
 	"github.com/conceptcodes/redis-go/internal/constants"
+	"github.com/conceptcodes/redis-go/internal/resp"
 )
+
+var l net.Listener
 
 func Start() {
 	port := fmt.Sprintf(":%d", constants.Port)
@@ -27,9 +31,33 @@ func Start() {
 	}
 }
 
+func Shutdown() {
+	log.Println("Server shutting down...")
+	if l != nil {
+		l.Close()
+	}
+}
+
 func handleConnection(c net.Conn) {
 	defer c.Close()
 	log.Printf("Serving %s", c.RemoteAddr().String())
-	// TODO: read from the connection, parse commands,
-	log.Printf("Connection closed for %s", c.RemoteAddr().String())
+
+	p := resp.NewParser(c)
+	for {
+		cmd, err := p.Parse()
+		if err != nil {
+			if err == io.EOF {
+				log.Printf("Client %s disconnected", c.RemoteAddr().String())
+				break
+			}
+			log.Printf("Error parsing command from %s: %v", c.RemoteAddr().String(), err)
+			c.Write([]byte(err.Error()))
+		}
+		if cmd == nil {
+			log.Printf("Received nil command from %s", c.RemoteAddr().String())
+			continue
+		}
+		log.Printf("Received command from %s: %s", c.RemoteAddr().String(), cmd)
+		// TODO: Process the command and send a response
+	}
 }
