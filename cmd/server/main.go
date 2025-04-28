@@ -1,13 +1,16 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net"
+
+	"github.com/conceptcodes/redis-go/internal/constants"
 )
 
-func Run() {
-	port := "6370"
-	l, err := net.Listen("tcp", ":"+port)
+func Start() {
+	port := fmt.Sprintf(":%d", constants.Port)
+	l, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Failed to bind to port %s: %v", port, err)
 	}
@@ -27,6 +30,6 @@ func Run() {
 func handleConnection(c net.Conn) {
 	defer c.Close()
 	log.Printf("Serving %s", c.RemoteAddr().String())
-
+	// TODO: read from the connection, parse commands,
 	log.Printf("Connection closed for %s", c.RemoteAddr().String())
 }
