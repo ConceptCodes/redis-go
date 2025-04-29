@@ -40,13 +40,21 @@ func (p *Parser) Parse() (any, error) {
 
 func (p *Parser) readLine() ([]byte, error) {
 	line := make([]byte, 0, 256)
+	b := make([]byte, 1)
 	for {
-		b := make([]byte, 1)
 		_, err := p.reader.Read(b)
 		if err != nil {
 			return nil, err
 		}
 		if b[0] == '\r' {
+			nextByte := make([]byte, 1)
+			_, err := p.reader.Read(nextByte)
+			if err != nil {
+				return nil, err
+			}
+			if nextByte[0] != '\n' {
+				return nil, &ErrInvalidFormat{"expected '\\n' after '\\r'"}
+			}
 			continue
 		}
 		if b[0] == '\n' {
