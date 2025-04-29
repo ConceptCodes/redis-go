@@ -70,7 +70,7 @@ func (p *Parser) parseError() (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	// determine the error type based on the content of the line
+	// TODO: Handle different error types
 	return &GenericError{Message: string(line)}, nil
 }
 
